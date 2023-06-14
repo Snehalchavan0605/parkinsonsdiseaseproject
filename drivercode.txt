@@ -1,0 +1,67 @@
+import os
+import cv2
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+
+healthy_folder = "C:\\Users\\User\\Desktop\\MAJOR_PROJECT\\detect-parkinsons-disease-master (1)\\detect-parkinsons-disease-master\\dataset\\spiral\\testing\\healthy"
+parkinsons_folder = "C:\\Users\\User\\Desktop\\MAJOR_PROJECT\\detect-parkinsons-disease-master (1)\\detect-parkinsons-disease-master\\dataset\\spiral\\testing\\parkinson"
+
+# Initialize empty lists to store images and labels
+images = []
+labels = []
+
+# Load healthy images
+for filename in os.listdir(healthy_folder):
+    if filename.endswith(".png"):  # assuming the images are in JPG format
+        image = cv2.imread(os.path.join(healthy_folder, filename))
+        image = cv2.resize(image, (100, 100))
+        images.append(image)
+        labels.append(0)  # 0 represents healthy
+
+# Load Parkinson's diseased images
+for filename in os.listdir(parkinsons_folder):
+    if filename.endswith(".png"):
+        image = cv2.imread(os.path.join(parkinsons_folder, filename))
+        image = cv2.resize(image, (100, 100))
+        images.append(image)
+        labels.append(1)  # 1 represents Parkinson's disease
+
+images = np.array(images)
+labels = np.array(labels)
+
+# Normalize the image pixel values between 0 and 1
+images = images.astype('float32') / 255.0
+
+# Perform one-hot encoding on the labels
+label_encoder = LabelEncoder()
+labels = label_encoder.fit_transform(labels)
+labels = to_categorical(labels)
+
+# Split the dataset into training and testing sets (e.g., 80% for training, 20% for testing)
+train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2, random_state=42)
+
+# Define the model architecture (e.g., a simple CNN)
+model = Sequential()
+model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+model.add(MaxPooling2D((2, 2)))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D((2, 2)))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Flatten())
+model.add(Dense(64, activation='relu'))
+model.add(Dense(2, activation='softmax'))  # Assuming 2 classes: Parkinson's and non-Parkinson's
+
+# Compile the model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(train_images, train_labels, epochs=30, batch_size=32, validation_data=(test_images, test_labels))
+
+# Evaluate the model on the test set
+loss, accuracy = model.evaluate(test_images, test_labels)
+print("Test Loss:", loss)
+print("Test Accuracy:", accuracy)

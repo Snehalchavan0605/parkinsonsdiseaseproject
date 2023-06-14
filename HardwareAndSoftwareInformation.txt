@@ -1,0 +1,9 @@
+#Hardware and Software Information
+
+Hardware:
+-> Intel i5 core 10th Gen
+
+Software:
+-> Anaconda
+-> Jupyter Notebook
+-> and all the necessary libraries.
